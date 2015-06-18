@@ -23,7 +23,7 @@
 install=all
 IRAP_DIR1=
 SRC_DIR=
-IRAP_VERSION=0.6.1p14
+IRAP_VERSION=0.6.2p1
 
 #
 USE_CACHE=y
@@ -263,7 +263,7 @@ BEDTOOLS_VERSION=2.17.0
 BEDTOOLS_FILE=BEDTools.v$BEDTOOLS_VERSION.tar.gz
 BEDTOOLS_URL=http://bedtools.googlecode.com/files/$BEDTOOLS_FILE
    
-stringtie_VERSION=1.0.0
+stringtie_VERSION=1.0.3
 stringtie_FILE=stringtie-${stringtie_VERSION}.Linux_x86_64.tar.gz
 stringtie_URL=http://ccb.jhu.edu/software/stringtie/dl/$stringtie_FILE
 
@@ -325,7 +325,7 @@ rsem_VERSION=1.2.9
 rsem_FILE=rsem-${rsem_VERSION}.tar.gz
 rsem_URL=http://deweylab.biostat.wisc.edu/rsem/src/$rsem_FILE
 
-FUSIONMAP_VERSION=2015-01-09
+FUSIONMAP_VERSION=2015-03-31
 FUSIONMAP_FILE=FusionMap_${FUSIONMAP_VERSION}.zip
 FUSIONMAP_URL=http://omicsoft.com/fusionmap/Software/$FUSIONMAP_FILE
 
@@ -412,6 +412,8 @@ export IRAP_DIR=$IRAP_DIR
 export PATH=\$IRAP_DIR/bin/bowtie1/bin:\$IRAP_DIR/bin:\$IRAP_DIR/scripts:\$PATH
 export LD_LIBRARY_PATH=\$IRAP_DIR/lib:\$LD_LIBRARY_PATH:/usr/local/lib
 export CFLAGS="-I\$IRAP_DIR/include -I\$IRAP_DIR/include/bam -I\$IRAP_DIR/include/boost  \$CFLAGS"
+export R_LIBS_USER=$IRAP_DIR/Rlibs
+export R3_LIBS_USER=$IRAP_DIR/Rlibs3
 export CXXFLAGS="-I\$IRAP_DIR/include -I\$IRAP_DIR/include/bam -I\$IRAP_DIR/include/boost -L\$IRAP_DIR/lib \$CXXFLAGS"
 export PERL5LIB=\$IRAP_DIR/perl/lib/perl5:\$IRAP_DIR/lib/perl5:\$IRAP_DIR/lib/perl5/x86_64-linux:\$IRAP_DIR/lib/perl5/$PERL_VERSION
 export PYTHONUSERBASE=\$IRAP_DIR/python
@@ -426,6 +428,8 @@ export THREADS=8
 #export JOB_MAX_MEM 32000
 #export IRAP_LSF_PARAMS=
 EOF
+    mkdir -p $IRAP_DIR/Rlibs
+    mkdir -p $IRAP_DIR/Rlibs3
 }
 
 
@@ -812,12 +816,14 @@ function R3_install {
     cat <<EOF > $IRAP_DIR/scripts/R3
 #!/bin/bash
 export PATH=\$IRAP_DIR/R3/bin:\$PATH
+export R_LIBS_USER=\$R3_LIBS_USER
 \$IRAP_DIR/R3/bin/R "\$@"
 EOF
     chmod +x $IRAP_DIR/scripts/R3
     cat <<EOF > $IRAP_DIR/scripts/Rscript3
 #!/bin/bash
 export PATH=\$IRAP_DIR/R3/bin:\$PATH
+export R_LIBS_USER=\$R3_LIBS_USER
 \$IRAP_DIR/R3/bin/Rscript "\$@"
 EOF
     chmod +x $IRAP_DIR/scripts/Rscript3
@@ -1058,6 +1064,7 @@ function R_packages_install {
     pinfo "Installing R packages..."
     R --no-save <<EOF
 repo<-"$CRAN_REPO"
+
 install.packages("multicore",repos=repo)
 install.packages("parallel",repos=repo)
 install.packages("intervals",repos=repo)

@@ -49,7 +49,7 @@ endef
 
 # 1 - exp name
 define set_GSE_HTML_FILES=
-$(eval override GSE_HTML_FILES:=$(subst $(name)/,$(name)/report/,$(foreach d,$(call de_dirs,$(1)),$(foreach c,$(contrasts),$(subst .tsv,.html,$(call quiet_ls,$(d)/$(c)*.gse.*.tsv)))))) $(GSE_HTML_FILES)
+$(eval override GSE_HTML_FILES:=$(subst $(name)/,$(name)/report/,$(foreach d,$(call de_dirs,$(1)),$(foreach c,$(contrasts),$(subst .tsv,.html,$(call file_not_empty,$(call quiet_ls,$(d)/$(c)*.gse.*.tsv))))))) $(GSE_HTML_FILES)
 endef
 
 
@@ -61,7 +61,11 @@ endef
 
 # mapper quant raw|nlib|rpkm gene|exon|trans
 define quant_target=
-$(if $(call quiet_ls1,$(name)/$(1)/$(2)/$(4)s.$(3).*.tsv), $(name)/report/quant/$(1)_x_$(2)/$(4).$(3).html, )
+$(if $(call file_not_empty,$(call quiet_ls1,$(name)/$(1)/$(2)/$(4)s.$(3).*.tsv)), $(name)/report/quant/$(1)_x_$(2)/$(4).$(3).html, )
+endef
+
+define file_not_empty=
+$(if $(call is_empty_file,$(1)),,$(1))
 endef
 
 define mapping_dirs=
@@ -251,7 +255,7 @@ mapping_report: report_setup $(call mapping_report_targets)
 
 
 # files required for producing the mapping report
-MAPPING_REPORT_PRE_STATS=$(foreach p,$(pe),$(name)/$(mapper)/$($(p)_dir)$(p).pe.hits.bam.stats $(name)/$(mapper)/$($(p)_dir)$(p).pe.hits.bam.stats.csv $(name)/$(mapper)/$($(p)_dir)$(p).pe.hits.bam.gene.stats) $(foreach s,$(se),$(name)/$(mapper)/$($(s)_dir)$(s).se.hits.bam.stats.csv $(name)/$(mapper)/$($(s)_dir)$(s).se.hits.bam.gene.stats $(name)/$(mapper)/$($(s)_dir)$(s).se.hits.bam.stats) $(foreach p,$(pe),$(name)/$(mapper)/$($(p)_dir)$(p).pe.hits.bam.gene.stats)
+MAPPING_REPORT_PRE_STATS=$(foreach p,$(pe),$(name)/$(mapper)/$($(p)_dir)$(p).pe.hits.bam.stats $(name)/$(mapper)/$($(p)_dir)$(p).pe.hits.bam.stats.csv $(name)/$(mapper)/$($(p)_dir)$(p).pe.hits.bam.gene.stats) $(foreach s,$(se),$(name)/$(mapper)/$($(s)_dir)$(s).se.hits.bam.stats.csv $(name)/$(mapper)/$($(s)_dir)$(s).se.hits.bam.gene.stats $(name)/$(mapper)/$($(s)_dir)$(s).se.hits.bam.stats) 
 
 # merge into a single file the statistics collected from the BAMs 
 $(name)/%/stats_raw.tsv $(name)/%/stats_perc.tsv:  $(foreach p,$(pe),$(name)/%/$($(p)_dir)$(p).pe.hits.bam.stats.csv) $(foreach s,$(se),$(name)/%/$($(s)_dir)$(s).se.hits.bam.stats.csv)
@@ -341,7 +345,7 @@ silent_targets+=quant_report quant_report_files
 # endef
 
 define set_QUANT_HTML_FILES=
-$(eval override QUANT_HTML_FILES=$(foreach q,$(SUPPORTED_QUANT_METHODS),$(foreach m,$(mapper),$(foreach f,gene exon transcript,$(foreach metric,raw nlib rpkm,$(call quant_target,$(m),$(q),$(metric),$(f)) ))))) $(QUANT_HTML_FILES)
+$(eval override QUANT_HTML_FILES=$(foreach f,$(foreach q,$(SUPPORTED_QUANT_METHODS),$(foreach m,$(mapper),$(foreach f,gene exon transcript,$(foreach metric,raw nlib rpkm,$(call quant_target,$(m),$(q),$(metric),$(f)) )))),$(if $(call is_empty_file,$(f)),,$(f)) )) $(QUANT_HTML_FILES)
 endef
 
 
